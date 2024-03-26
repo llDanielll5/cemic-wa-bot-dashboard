@@ -2,46 +2,83 @@
 
 import * as React from "react";
 import type { Metadata } from "next";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { Download as DownloadIcon } from "@phosphor-icons/react/dist/ssr/Download";
-import { Plus as PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
-import { Upload as UploadIcon } from "@phosphor-icons/react/dist/ssr/Upload";
-import dayjs from "dayjs";
-
-import { config } from "@/config";
-import { CustomersFilters } from "@/components/dashboard/customer/customers-filters";
 import { CustomersTable } from "@/components/dashboard/customer/customers-table";
 import type { Customer } from "@/components/dashboard/customer/customers-table";
-import { collection, getDocs, query, where } from "@firebase/firestore";
-import { db } from "@/utils/firebase";
-import { Card, Chip } from "@mui/material";
-
-// export const metadata = {
-//   title: `Customers | Dashboard | ${config.site.name}`,
-// } satisfies Metadata;
+import {
+  Alert,
+  Autocomplete,
+  Button,
+  Card,
+  Chip,
+  IconButton,
+  Pagination,
+  TextField,
+} from "@mui/material";
+import axiosInstance from "@/axios";
 
 type Locale = "BRASILIA-DF" | "UBERLANDIA-MG" | "";
+interface PaginationInterface {
+  page: number;
+  total: number;
+  pageSize: number;
+  pageCount: number;
+}
 
 export default function Page(): React.JSX.Element {
   const [cadastros, setCadastros] = React.useState<any[]>([]);
   const [filterLocale, setFilterLocale] = React.useState<Locale>("");
-  const page = 0;
-  const rowsPerPage = 5;
-  const paginatedCustomers = applyPagination(cadastros, page, rowsPerPage);
-  const ref = collection(db, "whatsapp_lectures");
-  const q = query(ref, where("location", "==", filterLocale));
+  const [hourFilter, setHourFilter] = React.useState("");
+  const [dateFilter, setDateFilter] = React.useState("");
+  const [pagination, setPagination] = React.useState<PaginationInterface>({
+    page: 1,
+    total: 0,
+    pageSize: 0,
+    pageCount: 0,
+  });
+
+  const resetFilters = () => {
+    setDateFilter("");
+    setHourFilter("");
+    setFilterLocale("");
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
 
   const getRegisters = React.useCallback(async () => {
-    const queried = filterLocale === "" ? ref : q;
-    const snapshot = await getDocs(queried);
-    let data: any[] = [];
-    snapshot.forEach((doc) => {
-      data.push(doc.data());
-    });
-    setCadastros(data);
-  }, [filterLocale]);
+    let localeFilter =
+      filterLocale !== "" ? `&filters[location][$eq]=${filterLocale}` : "";
+    let hourParams =
+      hourFilter !== "" ? `&filters[hour][$eq]=${hourFilter}` : "";
+    let dayParams = hourFilter !== "" ? `&filters[day][$eq]=${dateFilter}` : "";
+    let url = `/wa-schedules/?sort[0]=createdAt:desc&pagination[page]=${pagination.page}`;
+
+    if (localeFilter !== "") {
+      url += localeFilter;
+    } else {
+      url.replace(`&filters[location][$eq]=${filterLocale}`, "");
+    }
+
+    if (hourFilter !== "") {
+      url += hourParams;
+    } else {
+      url.replace(`&filters[hour][$eq]=${hourFilter}`, "");
+    }
+
+    if (dateFilter !== "") {
+      url += dayParams;
+    } else {
+      url.replace(`&filters[day][$eq]=${dateFilter}`, "");
+    }
+
+    return await axiosInstance.get(url).then(
+      ({ data }) => {
+        setPagination(data.meta.pagination);
+        setCadastros(data.data);
+      },
+      (err) => console.log(err)
+    );
+  }, [filterLocale, pagination.page, dateFilter, hourFilter]);
 
   React.useEffect(() => {
     getRegisters();
@@ -49,6 +86,7 @@ export default function Page(): React.JSX.Element {
 
   return (
     <Stack spacing={3}>
+      <title>CEMIC-BOT | Cadastros</title>
       <Stack direction="row" spacing={3}>
         <Stack spacing={1} sx={{ flex: "1 1 auto" }}>
           <Typography variant="h4">Cadastros</Typography>
@@ -61,22 +99,14 @@ export default function Page(): React.JSX.Element {
             </Button>
           </Stack> */}
         </Stack>
-        {/* <div>
-          <Button
-            startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />}
-            variant="contained"
-          >
-            Add
-          </Button>
-        </div> */}
       </Stack>
-      <Card sx={{ px: 4, py: 2 }} elevation={5}>
+      <Card sx={{ px: 4, py: 2, minWidth: 500 }} elevation={5}>
         <Typography variant="subtitle1" pb={1}>
           Filtrar por Localização:
         </Typography>
 
         <Stack direction="row" columnGap={2}>
-          {["BRASILIA-DF", "UBERLANDIA-MG"].map((item, index) => (
+          {["BRASILIA-DF", "UBERLANDIA-MG", "OTHER"].map((item, index) => (
             <Chip
               key={index}
               label={item}
@@ -89,21 +119,63 @@ export default function Page(): React.JSX.Element {
             />
           ))}
         </Stack>
+
+        <Stack
+          direction="row"
+          justifyContent="center"
+          alignItems="center"
+          columnGap={2}
+          pt={2}
+        >
+          <TextField
+            label={`Filtrar por Dia`}
+            InputLabelProps={{ shrink: true }}
+            type={"date"}
+            onChange={(e) => setDateFilter(e.target.value)}
+            fullWidth
+          />
+          <Autocomplete
+            fullWidth
+            options={["11:00", "17:00"]}
+            value={hourFilter}
+            onChange={(e, v) => setHourFilter(v!)}
+            renderInput={(params) => <TextField {...params} />}
+          />
+        </Stack>
       </Card>
-      <CustomersTable
-        page={page}
-        count={cadastros.length}
-        rows={cadastros}
-        rowsPerPage={rowsPerPage}
-      />
+
+      <Stack direction="row" alignItems="center">
+        {dateFilter !== "" || hourFilter !== "" ? (
+          <Button variant="contained" onClick={resetFilters}>
+            Resetar Filtros
+          </Button>
+        ) : null}
+      </Stack>
+
+      <Alert severity="success" icon={<></>}>
+        Foram encontrado(s) {pagination?.total} resultados.
+      </Alert>
+      <CustomersTable rows={cadastros} />
+      <Stack
+        direction={"row"}
+        columnGap={1}
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Pagination
+          count={pagination?.pageCount}
+          color="primary"
+          onChange={(e, p) => setPagination((prev) => ({ ...prev, page: p }))}
+        />
+      </Stack>
     </Stack>
   );
 }
 
-function applyPagination(
-  rows: Customer[],
-  page: number,
-  rowsPerPage: number
-): Customer[] {
-  return rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-}
+// function applyPagination(
+//   rows: Customer[],
+//   page: number,
+//   rowsPerPage: number
+// ): Customer[] {
+//   return rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+// }

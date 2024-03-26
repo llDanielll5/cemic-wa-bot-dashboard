@@ -18,6 +18,7 @@ import dayjs from "dayjs";
 
 import { useSelection } from "@/hooks/use-selection";
 import Link from "next/link";
+import { Chip } from "@mui/material";
 
 function noop(): void {
   // do nothing
@@ -25,13 +26,16 @@ function noop(): void {
 
 export interface Customer {
   id: string;
-  name: string;
-  location: "BRASILIA-DF" | "UBERLANDIA-MG";
-  from: string;
-  day: string;
-  hour: string;
-  device: string;
-  feedback: string;
+  attributes: {
+    name: string;
+    location: "BRASILIA-DF" | "UBERLANDIA-MG";
+    from: string;
+    day: string;
+    hour: string;
+    device: string;
+    feedback: string;
+    otherRegions?: string;
+  };
 }
 
 interface CustomersTableProps {
@@ -42,10 +46,7 @@ interface CustomersTableProps {
 }
 
 export function CustomersTable({
-  count = 0,
   rows = [],
-  page = 0,
-  rowsPerPage = 0,
 }: CustomersTableProps): React.JSX.Element {
   const rowIds = React.useMemo(() => {
     return rows.map((customer) => customer.id);
@@ -61,35 +62,25 @@ export function CustomersTable({
   return (
     <Card>
       <Box sx={{ overflowX: "auto" }}>
-        <Table sx={{ minWidth: "800px" }}>
+        <Table sx={{ minWidth: "1000px" }}>
           <TableHead>
             <TableRow>
-              {/* <TableCell padding="checkbox">
-                <Checkbox
-                  checked={selectedAll}
-                  indeterminate={selectedSome}
-                  onChange={(event) => {
-                    if (event.target.checked) {
-                      selectAll();
-                    } else {
-                      deselectAll();
-                    }
-                  }}
-                />
-              </TableCell> */}
               <TableCell>Nome</TableCell>
               <TableCell>Feedback</TableCell>
               <TableCell>Local</TableCell>
               <TableCell>Telefone</TableCell>
               <TableCell>Data Agendada</TableCell>
+              <TableCell>Hora Agendada</TableCell>
+              <TableCell width={200}>Outra Região</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row) => {
-              const phone = row.from.substring(0, 11);
               const isSelected = selected?.has(row.id);
-              const [y, m, d] = row.day.split("-");
-              const [h, _] = row.hour.split(":");
+              const client = row?.attributes;
+              const phone = client.from.substring(0, 11);
+              const [y, m, d] = client.day.split("-");
+              const [h, _] = client.hour.split(":");
               const date = new Date(
                 parseInt(y),
                 parseInt(m) - 1,
@@ -97,34 +88,54 @@ export function CustomersTable({
                 parseInt(h),
                 0
               );
+              const chipLocationColor = () => {
+                switch (client.location) {
+                  case "BRASILIA-DF":
+                    return "primary";
+                  case "UBERLANDIA-MG":
+                    return "warning";
+                  default:
+                    return "default";
+                }
+              };
+              const chipLocationLabel = () => {
+                switch (client.location) {
+                  case "BRASILIA-DF":
+                    return "Brasília-DF";
+                  case "UBERLANDIA-MG":
+                    return "Uberlândia-MG";
+                  default:
+                    return "Outra Região";
+                }
+              };
 
               return (
                 <TableRow hover key={row.id} selected={isSelected}>
-                  {/* <TableCell padding="checkbox">
-                    <Checkbox
-                      checked={isSelected}
-                      onChange={(event) => {
-                        if (event.target.checked) {
-                          selectOne(row.id);
-                        } else {
-                          deselectOne(row.id);
-                        }
-                      }}
-                    />
-                  </TableCell> */}
-                  <TableCell>
+                  <TableCell sx={{ border: "1px solid #d5d5d5" }}>
                     <Stack
                       sx={{ alignItems: "center" }}
+                      width={250}
                       direction="row"
                       spacing={2}
                     >
                       <Avatar />
-                      <Typography variant="subtitle2">{row.name}</Typography>
+                      <Typography variant="subtitle2">
+                        {client.name !== ""
+                          ? client.name
+                          : "------------------------"}
+                      </Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell>{row.feedback}</TableCell>
-                  <TableCell>{row.location}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ border: "1px solid #d5d5d5" }} width={200}>
+                    {client.feedback}
+                  </TableCell>
+                  <TableCell sx={{ border: "1px solid #d5d5d5" }}>
+                    <Chip
+                      label={chipLocationLabel()}
+                      color={chipLocationColor()}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ border: "1px solid #d5d5d5" }}>
                     <Link
                       title="Abrir Whatsapp"
                       href={`https://api.whatsapp.com/?send=${phone}`}
@@ -133,7 +144,15 @@ export function CustomersTable({
                       {phone}
                     </Link>
                   </TableCell>
-                  <TableCell>{date.toLocaleDateString()}</TableCell>
+                  <TableCell sx={{ border: "1px solid #d5d5d5" }}>
+                    {date.toLocaleDateString() === "Invalid Date"
+                      ? "Nenhuma"
+                      : date.toLocaleDateString()}
+                  </TableCell>
+                  <TableCell sx={{ border: "1px solid #d5d5d5" }}>
+                    {client.hour}
+                  </TableCell>
+                  <TableCell width={200}>{client.otherRegions}</TableCell>
                 </TableRow>
               );
             })}
@@ -141,15 +160,6 @@ export function CustomersTable({
         </Table>
       </Box>
       <Divider />
-      <TablePagination
-        component="div"
-        count={count}
-        onPageChange={noop}
-        onRowsPerPageChange={noop}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        rowsPerPageOptions={[5, 10, 25]}
-      />
     </Card>
   );
 }
