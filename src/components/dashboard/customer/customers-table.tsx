@@ -78,7 +78,7 @@ export function CustomersTable({
             {rows.map((row) => {
               const isSelected = selected?.has(row.id);
               const client = row?.attributes;
-              const phone = client.from.substring(0, 11);
+              const phone = client.from.substring(0, 12);
               const [y, m, d] = client.day.split("-");
               const [h, _] = client.hour.split(":");
               const date = new Date(
