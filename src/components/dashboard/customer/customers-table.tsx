@@ -60,9 +60,9 @@ export function CustomersTable({
   const selectedAll = rows.length > 0 && selected?.size === rows.length;
 
   return (
-    <Card>
-      <Box sx={{ overflowX: "auto" }}>
-        <Table sx={{ minWidth: "1000px" }}>
+    <Card sx={{ overflowX: "auto" }}>
+      <Box sx={{ minWidth: "1200px" }}>
+        <Table>
           <TableHead>
             <TableRow>
               <TableCell>Nome</TableCell>
@@ -126,7 +126,7 @@ export function CustomersTable({
                       </Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell sx={{ border: "1px solid #d5d5d5" }} width={200}>
+                  <TableCell sx={{ border: "1px solid #d5d5d5" }} width={350}>
                     {client.feedback}
                   </TableCell>
                   <TableCell sx={{ border: "1px solid #d5d5d5" }}>

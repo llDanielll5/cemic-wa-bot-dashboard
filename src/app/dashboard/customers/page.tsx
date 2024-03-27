@@ -15,6 +15,7 @@ import {
   IconButton,
   Pagination,
   TextField,
+  styled,
 } from "@mui/material";
 import axiosInstance from "@/axios";
 
@@ -100,12 +101,18 @@ export default function Page(): React.JSX.Element {
           </Stack> */}
         </Stack>
       </Stack>
-      <Card sx={{ px: 4, py: 2, minWidth: 500 }} elevation={5}>
+      <StyledCard elevation={5}>
         <Typography variant="subtitle1" pb={1}>
           Filtrar por Localização:
         </Typography>
 
-        <Stack direction="row" columnGap={2}>
+        <Stack
+          direction="row"
+          columnGap={2}
+          flexWrap={"wrap"}
+          rowGap={2}
+          pb={1}
+        >
           {["BRASILIA-DF", "UBERLANDIA-MG", "OTHER"].map((item, index) => (
             <Chip
               key={index}
@@ -120,17 +127,12 @@ export default function Page(): React.JSX.Element {
           ))}
         </Stack>
 
-        <Stack
-          direction="row"
-          justifyContent="center"
-          alignItems="center"
-          columnGap={2}
-          pt={2}
-        >
+        <FilterStack direction="row">
           <TextField
             label={`Filtrar por Dia`}
             InputLabelProps={{ shrink: true }}
             type={"date"}
+            placeholder="Filtrar por Dia"
             onChange={(e) => setDateFilter(e.target.value)}
             fullWidth
           />
@@ -139,10 +141,12 @@ export default function Page(): React.JSX.Element {
             options={["11:00", "17:00"]}
             value={hourFilter}
             onChange={(e, v) => setHourFilter(v!)}
-            renderInput={(params) => <TextField {...params} />}
+            renderInput={(params) => (
+              <TextField placeholder="Filtrar por horário!" {...params} />
+            )}
           />
-        </Stack>
-      </Card>
+        </FilterStack>
+      </StyledCard>
 
       <Stack direction="row" alignItems="center">
         {dateFilter !== "" || hourFilter !== "" ? (
@@ -172,10 +176,21 @@ export default function Page(): React.JSX.Element {
   );
 }
 
-// function applyPagination(
-//   rows: Customer[],
-//   page: number,
-//   rowsPerPage: number
-// ): Customer[] {
-//   return rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-// }
+const StyledCard = styled(Card)`
+  padding: 1rem 2rem;
+
+  @media screen and (max-width: 760px) {
+  }
+`;
+
+const FilterStack = styled(Stack)`
+  justify-content: center;
+  align-items: center;
+  column-gap: 1rem;
+  padding-top: 1rem;
+
+  @media screen and (max-width: 760px) {
+    flex-direction: column;
+    row-gap: 1rem;
+  }
+`;

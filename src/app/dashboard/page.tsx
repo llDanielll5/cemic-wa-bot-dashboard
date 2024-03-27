@@ -1,4 +1,6 @@
-import * as React from "react";
+"use client";
+
+import React, { useState, useEffect, useCallback } from "react";
 import type { Metadata } from "next";
 import Grid from "@mui/material/Unstable_Grid2";
 import dayjs from "dayjs";
@@ -12,32 +14,61 @@ import { TasksProgress } from "@/components/dashboard/overview/tasks-progress";
 import { TotalCustomers } from "@/components/dashboard/overview/total-customers";
 import { TotalProfit } from "@/components/dashboard/overview/total-profit";
 import { Traffic } from "@/components/dashboard/overview/traffic";
-
-export const metadata = {
-  title: `CEMIC-BOT | Dashboard `,
-} satisfies Metadata;
+import { getTrafficDevice } from "@/axios/requests";
 
 export default function Page(): React.JSX.Element {
+  const [traffics, setTraffics] = useState({
+    ios: 0,
+    android: 0,
+    web: 0,
+    total: 0,
+    scheduleds: 0,
+  });
+
+  const getDevicesTraffic = useCallback(async () => {
+    return await getTrafficDevice().then(
+      ({ android, ios, web, total, scheduleds }) =>
+        setTraffics({
+          ios: parseFloat(((ios / total) * 100).toFixed(2)),
+          android: parseFloat(((android / total) * 100).toFixed(2)),
+          web: parseFloat(((web / total) * 100).toFixed(2)),
+          total,
+          scheduleds,
+        })
+    );
+  }, []);
+
+  useEffect(() => {
+    getDevicesTraffic();
+  }, [getDevicesTraffic]);
+
   return (
     <Grid container spacing={3}>
-      <Grid lg={3} sm={6} xs={12}>
-        <Budget diff={12} trend="up" sx={{ height: "100%" }} value="$24k" />
-      </Grid>
-      <Grid lg={3} sm={6} xs={12}>
-        <TotalCustomers
-          diff={16}
-          trend="down"
+      <title>CEMIC-BOT | Dashboard</title>
+      <Grid lg={6} sm={6} xs={12}>
+        <Budget
+          trend="up"
           sx={{ height: "100%" }}
-          value="1.6k"
+          value={traffics.total.toString()}
         />
       </Grid>
-      <Grid lg={3} sm={6} xs={12}>
+      <Grid lg={6} sm={6} xs={12}>
+        <TotalCustomers
+          trend="down"
+          sx={{ height: "100%" }}
+          value={traffics.scheduleds.toString()}
+        />
+      </Grid>
+      {/* <Grid lg={4} sm={6} xs={12}>
         <TasksProgress sx={{ height: "100%" }} value={75.5} />
-      </Grid>
-      <Grid lg={3} sm={6} xs={12}>
-        <TotalProfit sx={{ height: "100%" }} value="$15k" />
-      </Grid>
-      <Grid lg={8} xs={12}>
+      </Grid> */}
+      {/* <Grid lg={4} sm={6} xs={12}>
+        <TotalProfit
+          sx={{ height: "100%" }}
+          value={}
+        />
+      </Grid> */}
+      {/* <Grid lg={8} xs={12}>
         <Sales
           chartSeries={[
             {
@@ -51,15 +82,15 @@ export default function Page(): React.JSX.Element {
           ]}
           sx={{ height: "100%" }}
         />
-      </Grid>
-      <Grid lg={4} md={6} xs={12}>
+      </Grid> */}
+      <Grid lg={12} md={12} xs={12}>
         <Traffic
-          chartSeries={[63, 15, 22]}
-          labels={["Desktop", "Tablet", "Phone"]}
+          chartSeries={[traffics.web, traffics.android, traffics.ios]}
+          labels={["PC", "Android", "iPhone"]}
           sx={{ height: "100%" }}
         />
       </Grid>
-      <Grid lg={4} md={6} xs={12}>
+      {/* <Grid lg={6} md={6} xs={12}>
         <LatestProducts
           products={[
             {
@@ -107,8 +138,8 @@ export default function Page(): React.JSX.Element {
           ]}
           sx={{ height: "100%" }}
         />
-      </Grid>
-      <Grid lg={8} md={12} xs={12}>
+      </Grid> */}
+      {/* <Grid lg={12} md={12} xs={12}>
         <LatestOrders
           orders={[
             {
@@ -156,7 +187,7 @@ export default function Page(): React.JSX.Element {
           ]}
           sx={{ height: "100%" }}
         />
-      </Grid>
+      </Grid> */}
     </Grid>
   );
 }

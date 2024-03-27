@@ -70,7 +70,7 @@ export function Budget({
                 </Typography>
               </Stack>
               <Typography color="text.secondary" variant="caption">
-                Since last month
+                desde o último mês.
               </Typography>
             </Stack>
           ) : null}
