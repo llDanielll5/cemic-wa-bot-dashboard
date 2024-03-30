@@ -18,7 +18,7 @@ import dayjs from "dayjs";
 
 import { useSelection } from "@/hooks/use-selection";
 import Link from "next/link";
-import { Chip } from "@mui/material";
+import { Button, Chip } from "@mui/material";
 
 function noop(): void {
   // do nothing
@@ -136,13 +136,14 @@ export function CustomersTable({
                     />
                   </TableCell>
                   <TableCell sx={{ border: "1px solid #d5d5d5" }}>
-                    <Link
+                    <Button
                       title="Abrir Whatsapp"
-                      href={`https://api.whatsapp.com/?send=${phone}`}
-                      target="_blank"
+                      variant="text"
+                      color="primary"
+                      onClick={() => window.open(`https://wa.me/${phone}`)}
                     >
                       {phone}
-                    </Link>
+                    </Button>
                   </TableCell>
                   <TableCell sx={{ border: "1px solid #d5d5d5" }}>
                     {date.toLocaleDateString() === "Invalid Date"
