@@ -138,7 +138,7 @@ export default function Page(): React.JSX.Element {
           />
           <Autocomplete
             fullWidth
-            options={["11:00", "17:00"]}
+            options={["11:00", "17:00", "18:00"]}
             value={hourFilter}
             onChange={(e, v) => setHourFilter(v!)}
             renderInput={(params) => (
